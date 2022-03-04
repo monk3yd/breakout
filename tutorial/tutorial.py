@@ -8,6 +8,11 @@ WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PyGame Tutorial")
 # Background RGB Color
 WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+
+BORDER = pygame.Rect(WIDTH/2 - 5, 0, 10, HEIGHT)
+
 # FPS/Refresh Rate
 FPS = 60
 # Spaceships speed
@@ -30,36 +35,37 @@ RED_SPACESHIP = pygame.transform.rotate(pygame.transform.scale(
 # Draw to window
 def draw_window(red, yellow):
     WIN.fill(WHITE)
+    pygame.draw.rect(WIN, BLACK, BORDER)
     WIN.blit(YELLOW_SPACESHIP, (yellow.x, yellow.y))
     WIN.blit(RED_SPACESHIP, (red.x, red.y))
     pygame.display.update()
 
 
 def handle_yellow_movement(keys, yellow):
-    if keys[pygame.K_w]:  # UP
+    if keys[pygame.K_w] and yellow.y - VEL > 0:  # UP
         yellow.y -= VEL
 
-    if keys[pygame.K_s]:  # DOWN
+    if keys[pygame.K_s] and yellow.y + SPACESHIP_HEIGHT + 16 < HEIGHT:  # DOWN
         yellow.y += VEL
 
-    if keys[pygame.K_a]:  # LEFT
+    if keys[pygame.K_a] and yellow.x - VEL > 0:  # LEFT
         yellow.x -= VEL
 
-    if keys[pygame.K_d]:  # RIGHT
+    if keys[pygame.K_d] and yellow.x + SPACESHIP_WIDTH - 2 * VEL < WIDTH / 2:  # RIGHT
         yellow.x += VEL
 
 
 def handle_red_movement(keys, red):
-    if keys[pygame.K_UP]:  # UP
+    if keys[pygame.K_UP] and red.y - VEL > 0:  # UP
         red.y -= VEL
 
-    if keys[pygame.K_DOWN]:  # DOWN
+    if keys[pygame.K_DOWN] and red.y + SPACESHIP_HEIGHT + 16 < HEIGHT:  # DOWN
         red.y += VEL
 
-    if keys[pygame.K_LEFT]:  # LEFT
+    if keys[pygame.K_LEFT] and red.x > WIDTH / 2 + 7:  # LEFT
         red.x -= VEL
 
-    if keys[pygame.K_RIGHT]:  # RIGHT
+    if keys[pygame.K_RIGHT] and red.x + SPACESHIP_WIDTH - 3 * VEL < WIDTH:  # RIGHT
         red.x += VEL
 
 

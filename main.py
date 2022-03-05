@@ -31,6 +31,10 @@ BALL = pygame.transform.scale(BALL_IMAGE, (BALL_WIDTH, BALL_HEIGHT))
 # Ball Speed
 BALL_VEL = [2, 2]  # x, y
 
+# Blocks
+BLOCK_WIDTH, BLOCK_HEIGHT = (50, 20)
+BLOCK_DIST = 8
+
 
 def draw_window(bar, ball, blocks):
     # Background
@@ -50,6 +54,7 @@ def draw_window(bar, ball, blocks):
 
     # Draw Blocks
     for block in blocks:
+        # WIN.blit(block, (block.x, block.y))
         pygame.draw.rect(WIN, RED, block)
     # Update Frame
     pygame.display.update()
@@ -63,7 +68,7 @@ def handle_bar_movement(keys, bar):
         bar.x += VEL
 
 
-def handle_ball_movement(ball, bar):
+def handle_ball_movement(ball, bar, blocks):
     ball.x += BALL_VEL[0]
     ball.y += BALL_VEL[1]
 
@@ -77,10 +82,17 @@ def handle_ball_movement(ball, bar):
     if bar.colliderect(ball):
         BALL_VEL[1] *= -1
 
-
-def handle_blocks(blocks):
     for block in blocks:
-        pass
+        if block.colliderect(ball):
+            blocks.remove(block)
+            BALL_VEL[1] *= -1
+
+# TODO
+# def handle_blocks(blocks, ball):
+#     for block in blocks:
+#             # TODO SCORE++
+#             blocks.remove(block)
+#             # BOUNCE
 
 
 def main():
@@ -88,10 +100,14 @@ def main():
     bar = pygame.Rect(WIDTH/2 - 75, HEIGHT - 50, BAR_WIDTH, BAR_HEIGHT)  # x, y, width, height
     # Ball Rectangle
     ball = pygame.Rect(WIDTH//2, HEIGHT//2, BALL_WIDTH, BALL_HEIGHT)
-    # Blocks
+    # Blocks Rectangles
     blocks = []
-    block = pygame.Rect(20, 80, 50, 20)
-    blocks.append(block)
+    for i in range(8):
+        for j in range(4):
+            x = 20 + i * (BLOCK_DIST + BLOCK_WIDTH)
+            y = 20 + j * (BLOCK_DIST + BLOCK_HEIGHT)
+            block = pygame.Rect(x, y, BLOCK_WIDTH, BLOCK_HEIGHT)
+            blocks.append(block)
 
     clock = pygame.time.Clock()
     run = True
@@ -104,8 +120,8 @@ def main():
 
         keys_pressed = pygame.key.get_pressed()
         handle_bar_movement(keys_pressed, bar)
-        handle_ball_movement(ball, bar)
-        handle_blocks(blocks)
+        handle_ball_movement(ball, bar, blocks)
+        # handle_blocks(blocks, ball)
         draw_window(bar, ball, blocks)
 
 

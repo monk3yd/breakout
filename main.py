@@ -1,6 +1,8 @@
 import pygame
 import os
 
+pygame.font.init()  # Initialize PyGame Font Library
+
 # Window
 WIDTH, HEIGHT = 500, 700
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -18,6 +20,9 @@ COLORS = {
     "green": (0, 255, 0),
     "yellow": (255, 255, 0)
 }
+
+# Score Font
+SCORE_FONT = pygame.font.SysFont('comicsans', 40)
 
 # Frames Per Second
 FPS = 60
@@ -43,6 +48,9 @@ BLOCK_DIST = 6
 BLOCK_ROWS = 8
 BLOCK_COLS = 13
 
+# Score Up
+SCORE_UP = pygame.USEREVENT + 1
+
 
 class Rect(pygame.sprite.Sprite):
     def __init__(self, x, y, width, height, color):
@@ -55,7 +63,7 @@ class Rect(pygame.sprite.Sprite):
         self.rect.y = y
 
 
-def draw_window(bar, ball, blocks):
+def draw_window(bar, ball, blocks, score):
     # Background
     WIN.fill(BLACK)
     # Draw Border
@@ -73,6 +81,10 @@ def draw_window(bar, ball, blocks):
     for block in blocks:
         pygame.draw.rect(WIN, block.color, block)
 
+    # TODO - Draw Score
+    score_text = SCORE_FONT.render("Score: " + str(score), 1, WHITE)
+    WIN.blit(score_text, (20, 20))
+
     # Update Frame
     pygame.display.update()
 
@@ -85,7 +97,7 @@ def handle_bar_movement(keys, bar):
         bar.x += VEL
 
 
-def handle_ball_movement(ball, bar, blocks):
+def handle_ball_movement(ball, bar, blocks, score):
     # Movement
     ball.x += BALL_VEL[0]
     ball.y += BALL_VEL[1]
@@ -101,12 +113,15 @@ def handle_ball_movement(ball, bar, blocks):
     if bar.colliderect(ball):
         BALL_VEL[1] *= -1
 
-    # TODO - Bounce Collision with Blocks
+    # Bounce Collision with Blocks
     for block in blocks:
         if block.rect.colliderect(ball):
             BALL_VEL[1] *= -1
+            # TODO - Score Up
+            pygame.event.post(pygame.event.Event(SCORE_UP))
+            # score += 1
             blocks.remove(block)
-    #         # TODO Score++
+            
 
 
 def main():
@@ -119,6 +134,7 @@ def main():
     for i in range(BLOCK_COLS):
         for j in range(BLOCK_ROWS):
             color = ()
+            # Check for block's color
             if j < 2:
                 color = COLORS["red"]
             elif j >= 2 and j < 4:
@@ -128,11 +144,12 @@ def main():
             else:
                 color = COLORS["yellow"]
 
-            # TODO - Check for block's color
             x = 20 + i * (BLOCK_DIST + BLOCK_WIDTH)
             y = 20 + j * (BLOCK_DIST + BLOCK_HEIGHT) + 80
             block = Rect(x, y, BLOCK_WIDTH, BLOCK_HEIGHT, color)
             blocks.append(block)
+
+    score = 0
 
     clock = pygame.time.Clock()
     run = True
@@ -150,17 +167,21 @@ def main():
                     BALL_VEL[1] = 3
                     print("Game Start.")
                     # TODO Write Text on Screen
+                
                 # TODO Pause
                 if event.key == pygame.K_p:
                     print("Pause.")
                     # TODO Write Text on Screen
 
+            if event.type == SCORE_UP:
+                score += 1
+
         gameover_text = ""
 
         keys_pressed = pygame.key.get_pressed()
         handle_bar_movement(keys_pressed, bar)
-        handle_ball_movement(ball, bar, blocks)
-        draw_window(bar, ball, blocks)
+        handle_ball_movement(ball, bar, blocks, score)
+        draw_window(bar, ball, blocks, score)
 
 
 if __name__ == "__main__":

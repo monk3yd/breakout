@@ -44,19 +44,15 @@ BLOCK_ROWS = 8
 BLOCK_COLS = 13
 
 
-class Rect(object):
-    def __init__(self, *args):
+class Rect(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, height, color):
         super().__init__()
         self.image = pygame.Surface([width, height])
         self.color = color
-        self.image.fill(color)
+        self.image.fill(self.color)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-
-    def change_value(self, color):
-        self.color = color
-        self.image.fill(color)
 
 
 def draw_window(bar, ball, blocks):
@@ -75,7 +71,7 @@ def draw_window(bar, ball, blocks):
 
     # Draw Blocks
     for block in blocks:
-        pygame.draw.rect(WIN, COLORS['red'], block)
+        pygame.draw.rect(WIN, block.color, block)
 
     # Update Frame
     pygame.display.update()
@@ -105,14 +101,12 @@ def handle_ball_movement(ball, bar, blocks):
     if bar.colliderect(ball):
         BALL_VEL[1] *= -1
 
-    # Bounce Collision with Blocks
-    # for block in blocks:
-    #     if block.colliderect(ball):
-    #         BALL_VEL[1] *= -1
-    #         blocks.remove(block)
+    # TODO - Bounce Collision with Blocks
+    for block in blocks:
+        if block.rect.colliderect(ball):
+            BALL_VEL[1] *= -1
+            blocks.remove(block)
     #         # TODO Score++
-        # touch = pygame.sprite.collide_rect(block)
-        # if touch:
 
 
 def main():
@@ -124,7 +118,7 @@ def main():
     blocks = []
     for i in range(BLOCK_COLS):
         for j in range(BLOCK_ROWS):
-            # Check for Block Color.
+            color = ()
             if j < 2:
                 color = COLORS["red"]
             elif j >= 2 and j < 4:
@@ -134,6 +128,7 @@ def main():
             else:
                 color = COLORS["yellow"]
 
+            # TODO - Check for block's color
             x = 20 + i * (BLOCK_DIST + BLOCK_WIDTH)
             y = 20 + j * (BLOCK_DIST + BLOCK_HEIGHT) + 80
             block = Rect(x, y, BLOCK_WIDTH, BLOCK_HEIGHT, color)

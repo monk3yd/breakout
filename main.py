@@ -4,12 +4,20 @@ import os
 # Window
 WIDTH, HEIGHT = 500, 700
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+
 # Title
 pygame.display.set_caption("Breakout Game")
+
 # RGB Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-RED = (255, 0, 0)
+
+COLORS = {
+    "red": (255, 0, 0),
+    "orange": (255, 126, 0),
+    "green": (0, 255, 0),
+    "yellow": (255, 255, 0)
+}
 
 # Frames Per Second
 FPS = 60
@@ -19,21 +27,21 @@ TOP_BORDER = pygame.Rect(0, 0,  WIDTH, 10)
 LEFT_BORDER = pygame.Rect(0, 0,  10, HEIGHT-60)
 RIGHT_BORDER = pygame.Rect(490, 0,  10, HEIGHT-60)
 
-# Bar Dimensions
-BAR_WIDTH, BAR_HEIGHT = (150, 20)
-# Bar Speed
-VEL = 3
+# Bar
+BAR_WIDTH, BAR_HEIGHT = (100, 20)  # Size
+VEL = 3  # Speed
 
 # Ball
-BALL_WIDTH, BALL_HEIGHT = (23, 23)
+BALL_WIDTH, BALL_HEIGHT = (15, 15)  # Size
 BALL_IMAGE = pygame.image.load(os.path.join("img", "ball.png"))
 BALL = pygame.transform.scale(BALL_IMAGE, (BALL_WIDTH, BALL_HEIGHT))
-# Ball Speed
-BALL_VEL = [2, 2]  # x, y
+BALL_VEL = [0, 0]  # x, y  # Ball Velocity
 
 # Blocks
-BLOCK_WIDTH, BLOCK_HEIGHT = (50, 20)
-BLOCK_DIST = 8
+BLOCK_WIDTH, BLOCK_HEIGHT = (30, 10)
+BLOCK_DIST = 6
+BLOCK_ROWS = 8
+BLOCK_COLS = 13
 
 
 def draw_window(bar, ball, blocks):
@@ -49,13 +57,25 @@ def draw_window(bar, ball, blocks):
 
     # Draw Ball
     WIN.blit(BALL, (ball.x, ball.y))
-    # pygame.draw.rect(WIN, WHITE, ball)
-    # pygame.draw.circle(WIN, WHITE, [WIDTH//2, HEIGHT//2], 5, 0)  # Surface, color, pos, radius, width
 
+    i = 0
     # Draw Blocks
     for block in blocks:
-        # WIN.blit(block, (block.x, block.y))
-        pygame.draw.rect(WIN, RED, block)
+        # TODO Check for Block Color.
+        if i < 0 or i > 7:
+            i = 0
+        if i == 0 or i == 1:
+            color = COLORS["red"]
+        elif i == 2 or i == 3:
+            color = COLORS["orange"]
+        elif i == 4 or i == 5:
+            color = COLORS["green"]
+        elif i == 6 or i == 7:
+            color = COLORS["yellow"]
+
+        pygame.draw.rect(WIN, color, block)
+        i += 1
+
     # Update Frame
     pygame.display.update()
 
@@ -69,30 +89,27 @@ def handle_bar_movement(keys, bar):
 
 
 def handle_ball_movement(ball, bar, blocks):
+    # Movement
     ball.x += BALL_VEL[0]
     ball.y += BALL_VEL[1]
 
-    # BOUNCE
+    # Bounce Collision with Wall
     if LEFT_BORDER.colliderect(ball) or RIGHT_BORDER.colliderect(ball):
         BALL_VEL[0] *= -1
 
     if TOP_BORDER.colliderect(ball):
         BALL_VEL[1] *= -1
 
+    # Bounce Collision with Bar
     if bar.colliderect(ball):
         BALL_VEL[1] *= -1
 
+    # Bounce Collision with Blocks
     for block in blocks:
         if block.colliderect(ball):
-            blocks.remove(block)
             BALL_VEL[1] *= -1
-
-# TODO
-# def handle_blocks(blocks, ball):
-#     for block in blocks:
-#             # TODO SCORE++
-#             blocks.remove(block)
-#             # BOUNCE
+            blocks.remove(block)
+            # TODO Score++
 
 
 def main():
@@ -102,10 +119,10 @@ def main():
     ball = pygame.Rect(WIDTH//2, HEIGHT//2, BALL_WIDTH, BALL_HEIGHT)
     # Blocks Rectangles
     blocks = []
-    for i in range(8):
-        for j in range(4):
+    for i in range(BLOCK_COLS):
+        for j in range(BLOCK_ROWS):
             x = 20 + i * (BLOCK_DIST + BLOCK_WIDTH)
-            y = 20 + j * (BLOCK_DIST + BLOCK_HEIGHT)
+            y = 20 + j * (BLOCK_DIST + BLOCK_HEIGHT) + 80
             block = pygame.Rect(x, y, BLOCK_WIDTH, BLOCK_HEIGHT)
             blocks.append(block)
 
@@ -118,10 +135,23 @@ def main():
                 run = False
                 pygame.quit()
 
+            if event.type == pygame.KEYDOWN:
+                # Start
+                if event.key == pygame.K_SPACE:
+                    BALL_VEL[0] = 3
+                    BALL_VEL[1] = 3
+                    print("Game Start.")
+                    # TODO Write Text on Screen
+                # TODO Pause
+                if event.key == pygame.K_p:
+                    print("Pause.")
+                    # TODO Write Text on Screen
+
+        gameover_text = ""
+
         keys_pressed = pygame.key.get_pressed()
         handle_bar_movement(keys_pressed, bar)
         handle_ball_movement(ball, bar, blocks)
-        # handle_blocks(blocks, ball)
         draw_window(bar, ball, blocks)
 
 

@@ -44,6 +44,21 @@ BLOCK_ROWS = 8
 BLOCK_COLS = 13
 
 
+class Rect(object):
+    def __init__(self, *args):
+        super().__init__()
+        self.image = pygame.Surface([width, height])
+        self.color = color
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def change_value(self, color):
+        self.color = color
+        self.image.fill(color)
+
+
 def draw_window(bar, ball, blocks):
     # Background
     WIN.fill(BLACK)
@@ -58,23 +73,9 @@ def draw_window(bar, ball, blocks):
     # Draw Ball
     WIN.blit(BALL, (ball.x, ball.y))
 
-    i = 0
     # Draw Blocks
     for block in blocks:
-        # TODO Check for Block Color.
-        if i < 0 or i > 7:
-            i = 0
-        if i == 0 or i == 1:
-            color = COLORS["red"]
-        elif i == 2 or i == 3:
-            color = COLORS["orange"]
-        elif i == 4 or i == 5:
-            color = COLORS["green"]
-        elif i == 6 or i == 7:
-            color = COLORS["yellow"]
-
-        pygame.draw.rect(WIN, color, block)
-        i += 1
+        pygame.draw.rect(WIN, COLORS['red'], block)
 
     # Update Frame
     pygame.display.update()
@@ -105,11 +106,13 @@ def handle_ball_movement(ball, bar, blocks):
         BALL_VEL[1] *= -1
 
     # Bounce Collision with Blocks
-    for block in blocks:
-        if block.colliderect(ball):
-            BALL_VEL[1] *= -1
-            blocks.remove(block)
-            # TODO Score++
+    # for block in blocks:
+    #     if block.colliderect(ball):
+    #         BALL_VEL[1] *= -1
+    #         blocks.remove(block)
+    #         # TODO Score++
+        # touch = pygame.sprite.collide_rect(block)
+        # if touch:
 
 
 def main():
@@ -121,9 +124,19 @@ def main():
     blocks = []
     for i in range(BLOCK_COLS):
         for j in range(BLOCK_ROWS):
+            # Check for Block Color.
+            if j < 2:
+                color = COLORS["red"]
+            elif j >= 2 and j < 4:
+                color = COLORS["orange"]
+            elif j >= 4 and j < 6:
+                color = COLORS["green"]
+            else:
+                color = COLORS["yellow"]
+
             x = 20 + i * (BLOCK_DIST + BLOCK_WIDTH)
             y = 20 + j * (BLOCK_DIST + BLOCK_HEIGHT) + 80
-            block = pygame.Rect(x, y, BLOCK_WIDTH, BLOCK_HEIGHT)
+            block = Rect(x, y, BLOCK_WIDTH, BLOCK_HEIGHT, color)
             blocks.append(block)
 
     clock = pygame.time.Clock()

@@ -1,4 +1,6 @@
 import pygame
+
+import random
 import os
 
 pygame.font.init()  # Initialize PyGame Font Library
@@ -21,8 +23,11 @@ COLORS = {
     "yellow": (255, 255, 0)
 }
 
-# Score Font
+# Fonts
 SCORE_FONT = pygame.font.SysFont('comicsans', 40)
+START_FONT = pygame.font.SysFont('comicsans', 30)
+PAUSE_FONT = pygame.font.SysFont('comicsans', 30)
+GAMEOVER_FONT = pygame.font.SysFont('comicsans', 30)
 
 # Frames Per Second
 FPS = 60
@@ -40,7 +45,6 @@ VEL = 3  # Speed
 BALL_WIDTH, BALL_HEIGHT = (15, 15)  # Size
 BALL_IMAGE = pygame.image.load(os.path.join("img", "ball.png"))
 BALL = pygame.transform.scale(BALL_IMAGE, (BALL_WIDTH, BALL_HEIGHT))
-BALL_VEL = [0, 0]  # x, y  # Ball Velocity
 
 # Blocks
 BLOCK_WIDTH, BLOCK_HEIGHT = (30, 10)
@@ -50,6 +54,9 @@ BLOCK_COLS = 13
 
 # Score Up
 SCORE_UP = pygame.USEREVENT + 1
+
+# Out of Bounds
+OUT_OF_BOUND = pygame.USEREVENT + 2
 
 
 class Rect(pygame.sprite.Sprite):
@@ -63,7 +70,7 @@ class Rect(pygame.sprite.Sprite):
         self.rect.y = y
 
 
-def draw_window(bar, ball, blocks, score):
+def draw_window(bar, ball, blocks, show_start_text, score, paused, gameover):
     # Background
     WIN.fill(BLACK)
     # Draw Border
@@ -81,9 +88,27 @@ def draw_window(bar, ball, blocks, score):
     for block in blocks:
         pygame.draw.rect(WIN, block.color, block)
 
-    # TODO - Draw Score
+    # Draw Score
     score_text = SCORE_FONT.render("Score: " + str(score), 1, WHITE)
     WIN.blit(score_text, (20, 20))
+
+    # Draw Start Text
+    if show_start_text:
+        start_text = START_FONT.render("Please Press SPACE to Start the Game :)", 1, WHITE)
+        WIN.blit(start_text, (50, 300))
+
+    if paused:
+        paused_text = PAUSE_FONT.render("Game is Paused. Press P to Resume.", 1, WHITE)
+        WIN.blit(paused_text, (80, 300))
+
+    # Draw Game Over Text
+    if gameover:
+        gameover_text = GAMEOVER_FONT.render("Ball out of bounds. Game Over.", 1, WHITE)
+        WIN.blit(gameover_text, (80, 300))
+        # pygame.display.update()
+        # pygame.time.delay(5000)
+        # ball_velocity = [0, 0]
+        # WIN.blit(BALL, (ball.x, ball.y))
 
     # Update Frame
     pygame.display.update()
@@ -97,31 +122,33 @@ def handle_bar_movement(keys, bar):
         bar.x += VEL
 
 
-def handle_ball_movement(ball, bar, blocks, score):
+def handle_ball_movement(ball, bar, blocks, ball_velocity):
     # Movement
-    ball.x += BALL_VEL[0]
-    ball.y += BALL_VEL[1]
+    ball.x += ball_velocity[0]
+    ball.y += ball_velocity[1]
 
     # Bounce Collision with Wall
     if LEFT_BORDER.colliderect(ball) or RIGHT_BORDER.colliderect(ball):
-        BALL_VEL[0] *= -1
+        ball_velocity[0] *= -1
 
     if TOP_BORDER.colliderect(ball):
-        BALL_VEL[1] *= -1
+        ball_velocity[1] *= -1
 
     # Bounce Collision with Bar
     if bar.colliderect(ball):
-        BALL_VEL[1] *= -1
+        ball_velocity[1] *= -1
 
     # Bounce Collision with Blocks
     for block in blocks:
         if block.rect.colliderect(ball):
-            BALL_VEL[1] *= -1
-            # TODO - Score Up
+            ball_velocity[1] *= -1
+            # Score Up
             pygame.event.post(pygame.event.Event(SCORE_UP))
-            # score += 1
             blocks.remove(block)
-            
+
+    # Ball out of Bounds
+    if ball.y > HEIGHT:
+        pygame.event.post(pygame.event.Event(OUT_OF_BOUND))
 
 
 def main():
@@ -149,7 +176,14 @@ def main():
             block = Rect(x, y, BLOCK_WIDTH, BLOCK_HEIGHT, color)
             blocks.append(block)
 
+    # Variables
+    ball_velocity = [0, 0]  # x, y
+
     score = 0
+
+    show_start_text = True
+    paused = False
+    gameover = False
 
     clock = pygame.time.Clock()
     run = True
@@ -163,25 +197,42 @@ def main():
             if event.type == pygame.KEYDOWN:
                 # Start
                 if event.key == pygame.K_SPACE:
-                    BALL_VEL[0] = 3
-                    BALL_VEL[1] = 3
-                    print("Game Start.")
-                    # TODO Write Text on Screen
-                
-                # TODO Pause
+                    ball_velocity[0] = 3
+                    ball_velocity[1] = 3
+
+                    show_start_text = False  # Remove Starting Text from Screen
+                    print("Game Starting.")
+
+                # Pause
                 if event.key == pygame.K_p:
-                    print("Pause.")
-                    # TODO Write Text on Screen
+                    if not paused:
+                        vx, vy = ball_velocity
+                        print(vx, vy)
+                        paused = True
+                        ball_velocity = [0, 0]
+                        print("Pause.")
+                    else:
+                        paused = False
+                        ball_velocity = [vx, vy]
+                        print("Unpaused.")
 
             if event.type == SCORE_UP:
                 score += 1
 
-        gameover_text = ""
+            if event.type == OUT_OF_BOUND:
+                gameover = True
+                ball_velocity = [0, 0]
+                print("Out of Bounds.")
+
+                # TODO - Restart
+                print("Play Again press R")
+                # TODO - Quit
+                print("Quit the Game with Q")
 
         keys_pressed = pygame.key.get_pressed()
         handle_bar_movement(keys_pressed, bar)
-        handle_ball_movement(ball, bar, blocks, score)
-        draw_window(bar, ball, blocks, score)
+        handle_ball_movement(ball, bar, blocks, ball_velocity)
+        draw_window(bar, ball, blocks, show_start_text, score, paused, gameover)
 
 
 if __name__ == "__main__":

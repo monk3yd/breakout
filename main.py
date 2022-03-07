@@ -105,10 +105,11 @@ def draw_window(bar, ball, blocks, show_start_text, score, paused, gameover):
     if gameover:
         gameover_text = GAMEOVER_FONT.render("Ball out of bounds. Game Over.", 1, WHITE)
         WIN.blit(gameover_text, (80, 300))
-        # pygame.display.update()
-        # pygame.time.delay(5000)
-        # ball_velocity = [0, 0]
-        # WIN.blit(BALL, (ball.x, ball.y))
+        reset_and_quit_text = GAMEOVER_FONT.render("Game will Restart in 3 seconds...", 1 , WHITE)
+        WIN.blit(reset_and_quit_text, (80, 350))
+        pygame.display.update()
+        pygame.time.delay(3000)
+        WIN.fill(BLACK)
 
     # Update Frame
     pygame.display.update()
@@ -127,6 +128,7 @@ def handle_ball_movement(ball, bar, blocks, ball_velocity):
     ball.x += ball_velocity[0]
     ball.y += ball_velocity[1]
 
+    # TODO - Improve Bounce Randomness and Speed by Score
     # Bounce Collision with Wall
     if LEFT_BORDER.colliderect(ball) or RIGHT_BORDER.colliderect(ball):
         ball_velocity[0] *= -1
@@ -147,7 +149,7 @@ def handle_ball_movement(ball, bar, blocks, ball_velocity):
             blocks.remove(block)
 
     # Ball out of Bounds
-    if ball.y > HEIGHT:
+    if ball.y >= HEIGHT:
         pygame.event.post(pygame.event.Event(OUT_OF_BOUND))
 
 
@@ -216,23 +218,28 @@ def main():
                         ball_velocity = [vx, vy]
                         print("Unpaused.")
 
+            # TODO - Increase More Score if Block is from the Back
             if event.type == SCORE_UP:
                 score += 1
 
+            # Game Over
             if event.type == OUT_OF_BOUND:
                 gameover = True
                 ball_velocity = [0, 0]
                 print("Out of Bounds.")
-
-                # TODO - Restart
-                print("Play Again press R")
-                # TODO - Quit
-                print("Quit the Game with Q")
+                ball.x = WIDTH // 2
+                ball.y = HEIGHT // 2
+                
 
         keys_pressed = pygame.key.get_pressed()
         handle_bar_movement(keys_pressed, bar)
         handle_ball_movement(ball, bar, blocks, ball_velocity)
         draw_window(bar, ball, blocks, show_start_text, score, paused, gameover)
+
+        if gameover:
+            gameover = False
+            break
+    main()
 
 
 if __name__ == "__main__":
